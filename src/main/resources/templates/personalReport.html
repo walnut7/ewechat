@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+<title>Hello World!</title>
+<link th:href="@{/css/jquery-weui.min.css}" rel="stylesheet" type="text/css">
+<link th:href="@{/css/weui.min.css}" rel="stylesheet" type="text/css">
+<link th:href="@{/css/wxss.css.css}" rel="stylesheet" type="text/css">
+<script th:src="@{/js/jquery-3.2.1.min.js}"  type="text/javascript" ></script>
+<script th:src="@{/js/jquery-weui.min.js}"  type="text/javascript" ></script>
+</head>
+<body ontouchstart>
+	<h1 th:inline="text">Hello World!</h1>
+	<p th:text="${hello}"></p>
+    <div class="weui-tab">
+      <div class="weui-tab__bd">
+    	
+  	</div>
+</div>
+</body>
+</html>

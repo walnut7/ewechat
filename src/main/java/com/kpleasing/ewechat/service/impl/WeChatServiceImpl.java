@@ -1,7 +1,10 @@
 package com.kpleasing.ewechat.service.impl;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kpleasing.ewechat.common.Configure;
@@ -20,8 +23,7 @@ import com.kpleasing.ewechat.util.WeChatUtils;
 public class WeChatServiceImpl implements WeChatService {
 	
 	private static Logger logger = Logger.getLogger(WeChatServiceImpl.class);
-
-
+	
 	@Override
 	public void sendEWeChatTextMessage(String type, SendTextReqData textReq) {
 		StringBuilder strRequest = new StringBuilder();
@@ -198,4 +200,5 @@ public class WeChatServiceImpl implements WeChatService {
 	
 		
 	}
+
 }

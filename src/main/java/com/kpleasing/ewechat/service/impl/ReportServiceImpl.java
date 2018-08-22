@@ -13,10 +13,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kpleasing.ewechat.common.Configure;
+import com.kpleasing.ewechat.dao.CrmBpMasterDao;
 import com.kpleasing.ewechat.enums.APP_TYPE;
+import com.kpleasing.ewechat.mongo.collections.BranchCompany;
+import com.kpleasing.ewechat.mongo.collections.BusinessMember;
+import com.kpleasing.ewechat.mongo.collections.BusinessTeam;
+import com.kpleasing.ewechat.mongo.collections.KPBusinessReport;
+import com.kpleasing.ewechat.mongo.dao.KPBusinessReportDao;
 import com.kpleasing.ewechat.protocol.send_text.SendTextResData;
 import com.kpleasing.ewechat.service.ReportService;
 import com.kpleasing.ewechat.util.ConfigUtil;
@@ -32,6 +39,14 @@ import com.kpleasing.ewechat.vo.Platform;
 public class ReportServiceImpl implements ReportService {
 	
 	private static Logger logger = Logger.getLogger(ReportServiceImpl.class);
+	
+	@Autowired
+	CrmBpMasterDao crmBpMasterDao;
+	
+	
+	@Autowired
+	KPBusinessReportDao businessReportDao;
+
 	
 	private String getPushURL001() {
 		ConfigUtil conf = ConfigUtil.getInstance();
@@ -56,7 +71,7 @@ public class ReportServiceImpl implements ReportService {
 	
 	private void moveFileToLocal(String file1, String file2) {
 		String url = getPushURL001();
-		logger.info("请求下载文件1-URI："+url);
+		logger.info("请求下载文件1-URI：" + url);
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("save_file_addr", file1);
 		HttpHelper.doHttpDownload(url, map);
@@ -332,4 +347,120 @@ public class ReportServiceImpl implements ReportService {
 		parseFormatText2(file2, platform);
 		return platform;
 	}
+
+
+	@Override
+	public void createWeeklyReport() {
+		KPBusinessReport businessReport = new KPBusinessReport();
+		businessReport.setReport_date(DateUtil.date2Str(DateUtil.getDate(), DateUtil.yyyyMMdd));
+		businessReport.setBranchCompany(getBranchCompanyList());
+		
+		businessReportDao.createKPBusinessReport(businessReport);
+	}
+	
+	
+	/**
+	 *  分公司列表
+	 * @return
+	 */
+	private List<BranchCompany> getBranchCompanyList() {
+		List<BranchCompany> branchCompanyList = new ArrayList<BranchCompany>();
+		
+		BranchCompany branchCompany = new BranchCompany();
+		branchCompany.setBranchName("郑州分公司");
+		branchCompany.setBusinessTeam(getBusinessTeamList("201"));
+		branchCompanyList.add(branchCompany);
+		
+		return branchCompanyList;
+	}
+	
+	
+	/**
+	 *  销售小组清单
+	 * @return
+	 */
+	private List<BusinessTeam> getBusinessTeamList(String parentTeamId) {
+		List<BusinessTeam> businessTeamList = crmBpMasterDao.findBusinessTeamByPositionId(parentTeamId);
+		for(BusinessTeam businessTeam : businessTeamList) {
+			List<BusinessMember> businessMemberList = crmBpMasterDao.findBusinessMemeberByPositionId(businessTeam.getTeamId());
+			for(BusinessMember businessMember : businessMemberList ) {
+				setBusinessMemberReport(businessMember);
+			}
+			businessTeam.setBusinessMember(businessMemberList);
+			businessTeam.setMemberNum(businessMemberList.size());
+		}
+		return businessTeamList;
+	}
+	
+	
+	/**
+	 * 
+	 * @param businessMember
+	 */
+	private void setBusinessMemberReport(BusinessMember businessMember) {
+		String userId = businessMember.getUserId();
+		int fallowCustomers = crmBpMasterDao.getAllCrmBpMasterCount(userId);
+		businessMember.setFallowCustomers(fallowCustomers);
+		
+		int lastWeekAddCustomers = crmBpMasterDao.getLastWeekCrmBpMasterCount(userId);
+		businessMember.setLastWeekAddCustomers(lastWeekAddCustomers);
+		
+		int lastWeekRentCustomers = crmBpMasterDao.getLaskWeekRentCrmBpMasterCount(userId);
+		businessMember.setLastWeekRentCustomers(lastWeekRentCustomers);
+		
+		int customerA = crmBpMasterDao.getTypeACrmBpMasterCount(userId);
+		businessMember.setCustomerA(customerA);
+		
+		int customerB = crmBpMasterDao.getTypeBCrmBpMasterCount(userId);
+		businessMember.setCustomerB(customerB);
+		
+		int lastWeekCallbackCustomers = crmBpMasterDao.getLastWeekCallBackCrmBpMasterCount(userId);
+		businessMember.setLastWeekCallbackCustomers(lastWeekCallbackCustomers);
+		
+		int callbackCustomers = crmBpMasterDao.getAllCallBackCrmBpMasterCount(userId);
+		businessMember.setCallbackCustomers(callbackCustomers);
+		
+		businessMember.setUncallback3Customers(0);
+		businessMember.setUncallback7Customers(0);
+		businessMember.setUncallback15Customers(0);
+	}
+
+
+	@Override
+	public void pushBusinessTeamReport() {
+		// TODO Auto-generated method stub
+		
+	}
+
+ 
+	@Override
+	public BusinessTeam findBusinessTeamReportMsg(String date, String branchCompanyName, String teamID) throws Exception {
+		List<KPBusinessReport> kpBusinessList = businessReportDao.findReportByDate(date);
+		for(KPBusinessReport kpBusinessCR : kpBusinessList) {
+			System.out.println(kpBusinessCR.getBranchCompany());
+		}
+		
+		KPBusinessReport kpBusiness = kpBusinessList.get(0);
+		List<BranchCompany> branchCompanyList = kpBusiness.getBranchCompany();
+		for(BranchCompany branchCompany : branchCompanyList) {
+			if(branchCompany.getBranchName().equals(branchCompanyName)) {
+				List<BusinessTeam> businessTeamList = branchCompany.getBusinessTeam();
+				for(BusinessTeam businessTeam : businessTeamList) {
+					if(businessTeam.getTeamId().equals(teamID)) {
+						return businessTeam;
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+
+
+	@Override
+	public void findBusinessPersonalReportMsg() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

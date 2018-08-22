@@ -1,7 +1,5 @@
 package com.kpleasing.ewechat.controller;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
@@ -23,13 +21,7 @@ public class EWeChatDemo {
 	private static Logger logger = Logger.getLogger(EWeChatDemo.class);
 	
 	@Autowired
-	private WeChatService wechatService;
-	
-	
-	@RequestMapping(value = "/main", method = RequestMethod.GET)
-	public String doTest() throws IOException {
-		return "main";
-	}
+    private WeChatService wechatService;
 
 	
 	@RequestMapping(value = "/sendText", method = RequestMethod.POST )
