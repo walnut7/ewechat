@@ -82,6 +82,7 @@ public class ReportServiceImpl implements ReportService {
 		HttpHelper.doHttpDownload(url, map);
 	}
 	
+	
 	/**
 	 * 
 	 * @param file1
@@ -382,12 +383,44 @@ public class ReportServiceImpl implements ReportService {
 	private List<BusinessTeam> getBusinessTeamList(String parentTeamId) {
 		List<BusinessTeam> businessTeamList = crmBpMasterDao.findBusinessTeamByPositionId(parentTeamId);
 		for(BusinessTeam businessTeam : businessTeamList) {
+			int fallowCustomers = 0;              // 跟进客户数
+			int lastWeekAddCustomers = 0;         // 上周新登记客户数
+			int lastWeekRentCustomers = 0;        // 上周起租合同数
+			int customerA = 0;                    // A 类客户数
+			int customerB = 0;                    // B 类客户数
+			int lastWeekCallbackCustomers = 0;    // 上周回访客户数
+			int callbackCustomers = 0;            // 总回访次数
+			int uncallback3Customers = 0;         // 未及时回访AB类客户数
+			int uncallback7Customers = 0;         // 超1周未回访客户数
+			int uncallback15Customers = 0;        // 应强制转交或放弃客户数
+			
 			List<BusinessMember> businessMemberList = crmBpMasterDao.findBusinessMemeberByPositionId(businessTeam.getTeamId());
 			for(BusinessMember businessMember : businessMemberList ) {
 				setBusinessMemberReport(businessMember);
+				
+				fallowCustomers += businessMember.getFallowCustomers();              
+				lastWeekAddCustomers += businessMember.getLastWeekAddCustomers();         
+				lastWeekRentCustomers += businessMember.getLastWeekRentCustomers();     
+				customerA += businessMember.getCustomerA();               
+				customerB += businessMember.getCustomerB();              
+				lastWeekCallbackCustomers += businessMember.getLastWeekCallbackCustomers();
+				callbackCustomers += businessMember.getCallbackCustomers();        
+				uncallback3Customers += businessMember.getUncallback3Customers();      
+				uncallback7Customers += businessMember.getUncallback7Customers();      
+				uncallback15Customers += businessMember.getUncallback15Customers();     
 			}
 			businessTeam.setBusinessMember(businessMemberList);
 			businessTeam.setMemberNum(businessMemberList.size());
+			businessTeam.setFallowCustomers(fallowCustomers);
+			businessTeam.setLastWeekAddCustomers(lastWeekAddCustomers);
+			businessTeam.setLastWeekRentCustomers(lastWeekRentCustomers);
+			businessTeam.setCustomerA(customerA);
+			businessTeam.setCustomerB(customerB);
+			businessTeam.setLastWeekCallbackCustomers(lastWeekCallbackCustomers);
+			businessTeam.setCallbackCustomers(callbackCustomers);
+			businessTeam.setUncallback3Customers(uncallback3Customers);
+			businessTeam.setUncallback7Customers(uncallback7Customers);
+			businessTeam.setUncallback15Customers(uncallback15Customers);
 		}
 		return businessTeamList;
 	}
@@ -427,18 +460,60 @@ public class ReportServiceImpl implements ReportService {
 
 
 	@Override
-	public void pushBusinessTeamReport() {
-		// TODO Auto-generated method stub
+	public void pushBusinessTeamReport(Map<String, String> map) {
+		logger.info("start info ...... ");
+		ConfigUtil conf = ConfigUtil.getInstance();
 		
+		StringBuilder strRequest = new StringBuilder();
+		strRequest.append("{")
+		.append("\"touser\":\"").append(map.get("touser")).append("\",")
+		.append("\"toparty\":\"\",")
+		.append("\"totag\":\"").append(conf.getPropertyParam("totag.report.label1")).append("\",")
+		.append("\"msgtype\":\"news\",")
+		.append("\"agentid\":\"").append(Configure.REPORT_AGENT_ID).append("\",")
+		.append("\"news\":{")
+		.append("     \"articles\": [")
+		.append("          {")
+		.append("               \"title\":\"郑州分公司CRM周报\", ")
+		.append("               \"description\":\"\", ")
+		.append("               \"url\":\"http://kpxmc-uat.e-autofinance.net:8801/report/"+map.get("condition")+"\", ")
+		.append("               \"picurl\":\"http://kpxmc-uat.e-autofinance.net:8801/images/crm_title.jpg\", ")
+		.append("               \"btntxt\":\"更多\" ")
+		.append("          }")
+		.append("      ]")
+		.append("    }")
+		.append("}");
+		logger.info(strRequest.toString());
+		
+		try {
+			String url = WeChatUtils.getSendNewsUrl(WeChatUtils.getAccessToken(APP_TYPE.REPORT));
+			logger.info(url);
+			
+			String result = HttpHelper.doHttpPost(url, strRequest.toString());
+			logger.info("响应结果："+result);
+			
+			SendTextResData resText = new SendTextResData();
+			
+			resText = (SendTextResData) JsonUtil.jsonToBean(result, resText.getClass());
+			
+			logger.info("响应结果："+resText);
+			if(null != resText.getErrcode() && "42001".equals(resText.getErrcode())) {
+				url = WeChatUtils.getSendNewsUrl(WeChatUtils.getAccessToken(APP_TYPE.REPORT, true));
+				logger.info(url);
+				
+				result = HttpHelper.doHttpPost(url, strRequest.toString());
+				logger.info("响应结果："+result);
+			}
+		} catch (Exception e) {
+			logger.error("响应结果：" , e);
+			e.printStackTrace();
+		}
 	}
 
  
 	@Override
-	public BusinessTeam findBusinessTeamReportMsg(String date, String branchCompanyName, String teamID) throws Exception {
-		List<KPBusinessReport> kpBusinessList = businessReportDao.findReportByDate(date);
-		for(KPBusinessReport kpBusinessCR : kpBusinessList) {
-			System.out.println(kpBusinessCR.getBranchCompany());
-		}
+	public BusinessTeam findBusinessTeamReportMsg(String searchDate, String branchCompanyName, String teamID) throws Exception {
+		List<KPBusinessReport> kpBusinessList = businessReportDao.findReportByDate(searchDate);
 		
 		KPBusinessReport kpBusiness = kpBusinessList.get(0);
 		List<BranchCompany> branchCompanyList = kpBusiness.getBranchCompany();
@@ -452,15 +527,20 @@ public class ReportServiceImpl implements ReportService {
 				}
 			}
 		}
-		
 		return null;
 	}
 
 
 	@Override
-	public void findBusinessPersonalReportMsg() {
-		// TODO Auto-generated method stub
-		
+	public List<BusinessTeam> findBusinessBranchReportMsg(String searchDate, String branchName) throws Exception {
+		List<KPBusinessReport> kpBusinessList = businessReportDao.findReportByDate(searchDate);
+		KPBusinessReport kpBusiness = kpBusinessList.get(0);
+		List<BranchCompany> branchCompanyList = kpBusiness.getBranchCompany();
+		for(BranchCompany branchCompany : branchCompanyList) {
+			if(branchCompany.getBranchName().equals(branchName)) {
+				return branchCompany.getBusinessTeam();
+			}
+		}
+		return null;
 	}
-
 }

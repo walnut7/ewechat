@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.util.Properties;
 
 public class ConfigUtil {
-	private static final String WECHAT_CONF_FILE = "/wechat.properties";
+	private static final String WECHAT_CONF_FILE = "wechat.properties";
 	private static ConfigUtil instance;
 	private Properties property = new Properties();  
 

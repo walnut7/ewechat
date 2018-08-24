@@ -3,7 +3,14 @@
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
-<title>Hello World!</title>
+<title>[[${sales.userName}]]报表</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
 <link th:href="@{/css/jquery-weui.min.css}" rel="stylesheet" type="text/css">
 <link th:href="@{/css/weui.min.css}" rel="stylesheet" type="text/css">
 <link th:href="@{/css/wxss.css.css}" rel="stylesheet" type="text/css">
@@ -11,12 +18,57 @@
 <script th:src="@{/js/jquery-weui.min.js}"  type="text/javascript" ></script>
 </head>
 <body ontouchstart>
-	<h1 th:inline="text">Hello World!</h1>
-	<p th:text="${hello}"></p>
     <div class="weui-tab">
-      <div class="weui-tab__bd">
-    	
-  	</div>
-</div>
+        <div class="weui-tab__bd">
+            <div class="weui-form-preview" style="margin-left:5px;margin-right:10px;background-color: #F8F8F8" >
+		        <div class="weui-form-preview__bd" >
+		         	<div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">负责人：</label>
+                        <span class="weui-form-preview__value" style="text-align: left;" th:text="${sales.userName}"></span>
+                    </div>
+		  	        <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">跟进客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.fallowCustomers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">上周新登记客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.lastWeekAddCustomers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">上周起租合同数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.lastWeekRentCustomers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">A类客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.customerA}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">B类客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.customerB}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">上周回访客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.lastWeekCallbackCustomers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">总回访次数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.callbackCustomers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">未及时回访AB类客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.uncallback3Customers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">超1周未回访客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.uncallback7Customers}"></span>
+                    </div>
+                    <div class="weui-form-preview__item">
+                        <label class="weui-form-preview__label">应强制转交或放弃客户数：</label>
+                        <span class="weui-form-preview__value" style="text-align: right;" th:text="${sales.uncallback15Customers}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

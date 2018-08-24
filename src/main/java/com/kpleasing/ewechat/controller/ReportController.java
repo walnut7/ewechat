@@ -1,5 +1,7 @@
 package com.kpleasing.ewechat.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,31 +37,70 @@ public class ReportController {
 	private ReportService reportServ;
 	
 	@RequestMapping("/generateCR")
-    public String generateCrmReport(Map<String, Object> map) {
+    public String generateCrmReport(Model model) {
 		try {
-	        map.put("hello", "Hello Spring Boot");
 	        reportServ.createWeeklyReport();
-	        System.out.println("执行完成");
 	        logger.info("^^^^^^^^^^^^^^^^ 执行完成 " );
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
-        return "/helloHtml";
+        return "success";
     }
 	
 	@RequestMapping("/pushCR")
-    public String pushCrmReportMsg(Map<String, Object> map) {
+    public String pushCrmReportMsg(Model model) {
 		try {
-	        map.put("hello", "Hello Spring Boot");
 	        System.out.println("------------------------");
-	        reportServ.pushBusinessTeamReport();
-	      //  reportServ.sendBusinessMemberReport();
+	        List<Map<String, String>> sendList = getToUserList();
+	        for(Map<String, String> map : sendList) {
+	        	reportServ.pushBusinessTeamReport(map);
+	        }
 	        System.out.println("执行完成");
 	        logger.info("^^^^^^^^^^^^^^^^");
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
-        return "/success";
+        return "success";
+    }
+	
+	
+	private List<Map<String, String>> getToUserList() {
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		Map<String, String> m1 = new HashMap<String, String>();
+		m1.put("condition", "teamTopCR?searchDate=20180822&branchName=郑州分公司");
+		m1.put("touser", "HuangZhenHua");
+		m1.put("title", "郑州分公司CRM周报");
+		list.add(m1);
+		
+		/*Map<String, String> m2 = new HashMap<String, String>();
+		m2.put("condition", "teamleaderCR?searchDate=20180822&branchName=郑州分公司&teamID=203");
+		m2.put("touser", "HuangZhenHua|YanJun");
+		m2.put("title", "郑州分公司CRM周报");
+		list.add(m2);
+		
+		Map<String, String> m3 = new HashMap<String, String>();
+		m3.put("condition", "teamleaderCR?searchDate=20180822&branchName=郑州分公司&teamID=204");
+		m3.put("touser", "HuangZhenHua|YanJun");
+		m3.put("title", "郑州分公司CRM周报");
+		list.add(m3);*/
+		
+		return list;
+	}
+	
+	
+	@RequestMapping("/teamTopCR")
+    public String branchCrmReportMsg(String searchDate, String branchName, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t分公司名称："+branchName);
+	        List<BusinessTeam> teamList = reportServ.findBusinessBranchReportMsg(searchDate, branchName);
+	        
+	        model.addAttribute("teams", teamList);
+	        model.addAttribute("searchDate", searchDate);
+	        model.addAttribute("branchName", branchName);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "teamTopReport";
     }
 	
 	
@@ -78,10 +119,13 @@ public class ReportController {
 	        BusinessTeam businessTeam = reportServ.findBusinessTeamReportMsg(searchDate, branchName, teamID);
 	        
 	        model.addAttribute("team", businessTeam);
+	        model.addAttribute("searchDate", searchDate);
+	        model.addAttribute("branchName", branchName);
+	        model.addAttribute("teamID", teamID);
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
-        return "/teamReport";
+        return "teamReport";
     }
 	
 	
@@ -103,7 +147,7 @@ public class ReportController {
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
-        return "/teamDetailReport";
+        return "teamDetailReport";
     }
 	
 	
@@ -132,21 +176,9 @@ public class ReportController {
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
-        return "/teamLeaderReport";
+        return "personalReport";
     }
 	
-	
-	
-	@RequestMapping(value = "crm", method = RequestMethod.GET)
-	public ModelAndView reportCRM(HttpServletRequest request, String date) {
-		ModelMap model = new ModelMap();
-		
-		logger.info("打开日期1-1："+date);
-		model.put("date", date);
-		Platform platform = reportServ.getCtripR1(date);
-		model.put("pf", platform);
-		return new ModelAndView("report/ctrip30", model);
-	}
 	
 	@RequestMapping(value = "ctrip30", method = RequestMethod.GET)
 	public ModelAndView reportCtrip30(HttpServletRequest request, String date) {
@@ -194,5 +226,4 @@ public class ReportController {
 		 wechatService.createChatGroup();
 		return new ModelAndView("report/purchase", model);
 	}
-
 }

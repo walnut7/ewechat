@@ -1,5 +1,8 @@
 package com.kpleasing.ewechat.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.kpleasing.ewechat.mongo.collections.BusinessTeam;
 import com.kpleasing.ewechat.vo.Platform;
 
@@ -28,13 +31,37 @@ public interface ReportService {
 	public Platform getCtripR2(String date);
 
 
+	/**
+	 * 
+	 */
 	public void createWeeklyReport();
 
-	public void pushBusinessTeamReport();
+	
+	/**
+	 * @param map 
+	 * 
+	 */
+	public void pushBusinessTeamReport(Map<String, String> map);
 
 
+	/**
+	 * 
+	 * @param date
+	 * @param branchCompanyName
+	 * @param teamID
+	 * @return
+	 * @throws Exception
+	 */
 	public BusinessTeam findBusinessTeamReportMsg(String date, String branchCompanyName, String teamID) throws Exception;
 
 
-	public void findBusinessPersonalReportMsg();
+	/**
+	 * 
+	 * @param searchDate
+	 * @param branchName
+	 * @return
+	 * @throws Exception 
+	 */
+	public List<BusinessTeam> findBusinessBranchReportMsg(String searchDate, String branchName) throws Exception;
+
 }

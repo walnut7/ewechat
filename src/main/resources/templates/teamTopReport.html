@@ -20,8 +20,8 @@
 <body ontouchstart>
     <div class="weui-tab">
       <div class="weui-tab__bd">
-        <div class="weui-form-preview" style="margin-left:5px;margin-right:10px;background-color: #F8F8F8" >
-		  <div class="weui-form-preview__bd" onclick="javascript:toDetailPage()">
+        <div class="weui-form-preview" style="margin-left:5px;margin-right:10px;background-color: #F8F8F8" th:each="team:${teams}">
+		  <div class="weui-form-preview__bd" th:onclick="'javascript:toDetailPage(\''+${team.teamId}+'\')'" >
 		  	<div class="weui-form-preview__item">
               <label class="weui-form-preview__label">组名：</label>
               <span class="weui-form-preview__value" style="text-align: left;" th:text="${team.teamName}"></span>
@@ -64,8 +64,9 @@
 </div>
 <script th:inline="javascript">
 /*<![CDATA[*/
-function toDetailPage() {
-	window.location.href = /*[[@{/report/teamDetailCR(searchDate=${searchDate},teamID=${teamID},branchName=${branchName})}]]*/;  
+function toDetailPage(teamId) {
+	var redirectUrl = /*[[@{/report/teamDetailCR(searchDate=${searchDate},branchName=${branchName})}]]*/;  
+	window.location.href = redirectUrl + "&teamID=" + teamId;
 }
 /*]]>*/
 </script>
