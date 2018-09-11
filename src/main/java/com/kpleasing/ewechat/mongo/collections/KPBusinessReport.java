@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection="report_buss_crm")
+@Document(collection="report_business_snap")
 public class KPBusinessReport {
 	
 	private String report_date;

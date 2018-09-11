@@ -1,9 +1,6 @@
 package com.kpleasing.ewechat.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,6 +15,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.kpleasing.ewechat.mongo.collections.BusinessMember;
 import com.kpleasing.ewechat.mongo.collections.BusinessTeam;
+import com.kpleasing.ewechat.mongo.collections.CustomerDetail;
+import com.kpleasing.ewechat.mongo.collections.CustomerInfo;
 import com.kpleasing.ewechat.service.ReportService;
 import com.kpleasing.ewechat.service.WeChatService;
 import com.kpleasing.ewechat.vo.Merchant;
@@ -40,7 +39,7 @@ public class ReportController {
     public String generateCrmReport(Model model) {
 		try {
 	        reportServ.createWeeklyReport();
-	        logger.info("^^^^^^^^^^^^^^^^ 执行完成 " );
+	        logger.info("报表创建，执行完成 " );
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
@@ -50,42 +49,13 @@ public class ReportController {
 	@RequestMapping("/pushCR")
     public String pushCrmReportMsg(Model model) {
 		try {
-	        System.out.println("------------------------");
-	        List<Map<String, String>> sendList = getToUserList();
-	        for(Map<String, String> map : sendList) {
-	        	reportServ.pushBusinessTeamReport(map);
-	        }
-	        System.out.println("执行完成");
-	        logger.info("^^^^^^^^^^^^^^^^");
+	        reportServ.pushBusinessReport();
+	        logger.info("报表推送，执行完成 " );
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
         return "success";
     }
-	
-	
-	private List<Map<String, String>> getToUserList() {
-		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
-		Map<String, String> m1 = new HashMap<String, String>();
-		m1.put("condition", "teamTopCR?searchDate=20180822&branchName=郑州分公司");
-		m1.put("touser", "HuangZhenHua");
-		m1.put("title", "郑州分公司CRM周报");
-		list.add(m1);
-		
-		/*Map<String, String> m2 = new HashMap<String, String>();
-		m2.put("condition", "teamleaderCR?searchDate=20180822&branchName=郑州分公司&teamID=203");
-		m2.put("touser", "HuangZhenHua|YanJun");
-		m2.put("title", "郑州分公司CRM周报");
-		list.add(m2);
-		
-		Map<String, String> m3 = new HashMap<String, String>();
-		m3.put("condition", "teamleaderCR?searchDate=20180822&branchName=郑州分公司&teamID=204");
-		m3.put("touser", "HuangZhenHua|YanJun");
-		m3.put("title", "郑州分公司CRM周报");
-		list.add(m3);*/
-		
-		return list;
-	}
 	
 	
 	@RequestMapping("/teamTopCR")
@@ -144,6 +114,8 @@ public class ReportController {
 	        BusinessTeam businessTeam = reportServ.findBusinessTeamReportMsg(searchDate, branchName, teamID);
 	        
 	        model.addAttribute("team", businessTeam);
+	        model.addAttribute("branchName", branchName);
+	        model.addAttribute("searchDate", searchDate);
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
@@ -167,6 +139,8 @@ public class ReportController {
 	        BusinessTeam businessTeam = reportServ.findBusinessTeamReportMsg(searchDate, branchName, teamID);
 	        
 	        model.addAttribute("team", businessTeam);
+	        model.addAttribute("branchName", branchName);
+	        model.addAttribute("searchDate", searchDate);
 	        List<BusinessMember> businessMemberList = businessTeam.getBusinessMember();
 	        for(BusinessMember businessMember : businessMemberList) {
 	        	if(saleID.equals(businessMember.getUserId())) {
@@ -180,6 +154,163 @@ public class ReportController {
     }
 	
 	
+	/**
+	 * 
+	 * @param searchDate
+	 * @param salesID
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping("/fallowCustomerDetailCR")
+    public String fallowCustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> fallowCustomerDetail = customerDetail.getFallowCustomerDetail();
+	       
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", fallowCustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "fallowCustomerDetailReport";
+    }
+	
+	
+	/**
+	 * 
+	 * @param searchDate
+	 * @param salesID
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping("/lastWeekAddCustomerDetailCR")
+    public String lastWeekAddCustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> lastWeekAddCustomerDetail = customerDetail.getLastWeekAddCustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", lastWeekAddCustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "lastWeekAddCustomerDetailReport";
+    }
+	
+
+	@RequestMapping("/lastWeekRentCustomerDetailCR")
+    public String lastWeekRentCustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> lastWeekRentCustomerDetail = customerDetail.getLastWeekRentCustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", lastWeekRentCustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "lastWeekRentCustomerDetailReport";
+    }
+	
+	
+	@RequestMapping("/customerADetailCR")
+    public String customerAReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> customerADetail = customerDetail.getCustomerADetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", customerADetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "customerADetailReport";
+    }
+	
+	
+	@RequestMapping("/customerBDetailCR")
+    public String customerBReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> customerBDetail = customerDetail.getCustomerBDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", customerBDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "customerBDetailReport";
+    }
+	
+	@RequestMapping("/lastWeekCallbackCustomerDetailCR")
+    public String lastWeekCallbackCustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> lastWeekCallbackCustomerDetail = customerDetail.getLastWeekCallbackCustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", lastWeekCallbackCustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "lastWeekCallbackCustomerDetailReport";
+    }
+	
+	
+	@RequestMapping("/uncallbackCustomerABDetailCR")
+    public String uncallbackCustomerABReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> uncallbackCustomerABDetail = customerDetail.getUncallback3CustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", uncallbackCustomerABDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "uncallbackABCustomerDetailReport";
+    }
+	
+	
+	@RequestMapping("/uncallback7CustomerDetailCR")
+    public String uncallback7CustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> uncallback7CustomerDetail = customerDetail.getUncallback7CustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", uncallback7CustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "uncallback7CustomerDetailReport";
+    }
+	
+	
+	@RequestMapping("/uncallback15CustomerDetailCR")
+    public String uncallback15CustomerReportDetail(String searchDate, String salesID, Model model) {
+		try {
+	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
+	        List<CustomerInfo> uncallback15CustomerDetail = customerDetail.getUncallback15CustomerDetail();
+	        
+	        model.addAttribute("owername", customerDetail.getSales_name());
+	        model.addAttribute("customers", uncallback15CustomerDetail);
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+        return "uncallback15CustomerDetailReport";
+    }
+	
+
 	@RequestMapping(value = "ctrip30", method = RequestMethod.GET)
 	public ModelAndView reportCtrip30(HttpServletRequest request, String date) {
 		ModelMap model = new ModelMap();

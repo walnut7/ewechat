@@ -31,7 +31,7 @@
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.memberNum}"></span>
             </div>
 			<div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">跟进客户总数：</label>
+              <label class="weui-form-preview__label">当前跟进客户总数：</label>
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.fallowCustomers}"></span>
             </div>
             <div class="weui-form-preview__item">
@@ -55,8 +55,20 @@
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.lastWeekCallbackCustomers}"></span>
             </div>
              <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">总回访次数：</label>
+              <label class="weui-form-preview__label">上周总回访次数：</label>
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.callbackCustomers}"></span>
+            </div>
+            <div class="weui-form-preview__item">
+              <label class="weui-form-preview__label">未及时回访AB类客户数 ：</label>
+              <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.uncallback3Customers}"></span>
+            </div>
+            <div class="weui-form-preview__item">
+              <label class="weui-form-preview__label">超一周未回访客户数：</label>
+              <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.uncallback7Customers}"></span>
+            </div>
+            <div class="weui-form-preview__item">
+              <label class="weui-form-preview__label">应强制转交或放弃客户数：</label>
+              <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.uncallback15Customers}"></span>
             </div>
 		  </div>
        </div>

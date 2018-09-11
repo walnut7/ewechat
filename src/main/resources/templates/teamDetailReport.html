@@ -3,7 +3,7 @@
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
-<title>郑州分公司CRM报表</title>
+<title th:text="${branchName}+'CRM报表'"></title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -19,44 +19,155 @@
 </head>
 <body ontouchstart>
     <div class="weui-tab">
-      <div class="weui-tab__bd">
-        <div class="weui-form-preview" style="margin-left:5px;margin-right:10px;background-color: #F8F8F8" th:each="member:${team.businessMember}">
-		  <div class="weui-form-preview__bd">
-		  	<div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">负责人：</label>
-              <span class="weui-form-preview__value" style="text-align: left;" th:text="${member.userName}"></span>
-            </div>
-			<div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">跟进客户总数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.fallowCustomers}"></span>
-            </div>
-            <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">上周新登记客户数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.lastWeekAddCustomers}"></span>
-            </div>
-            <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">上周起租合同数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.lastWeekRentCustomers}"></span>
-            </div>
-            <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">A类客户数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.customerA}"></span>
-            </div>
-            <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">B类客户数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.customerB}"></span>
-            </div>
-             <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">上周回访客户数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.lastWeekCallbackCustomers}"></span>
-            </div>
-             <div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">总回访次数：</label>
-              <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.callbackCustomers}"></span>
-            </div>
+	    <div class="weui-navbar">
+		       <div class="weui-navbar__item weui-bar__item--on wxss-register_title">
+			       <div style="width:64px" class="wxss-register_turnimg" th:onclick="'javascript:history.go(-1)'" >
+	    			  <img th:src="@{/images/turnback.png}" alt="" class="weui-tabbar__icon">
+			       </div>
+				   <span id="NavTitle" th:text="${team.teamName}+'-'+${team.teamLeader}">当前跟进客户详情</span>
+				   <div style="width: 64px"></div>
+		       </div>
 		  </div>
-       </div>
-  	</div>
+        <div class="weui-tab__bd">
+        <div class="weui-tab__bd-item weui-tab__bd-item--active">
+	        <div class="weui-form-preview" style="margin:1px 8px 20px 8px;background-color: #F8F8F8" th:each="member:${team.businessMember}">
+			  <div class="weui-form-preview__hd">
+			  	<div class="weui-form-preview__item">
+			  	  <label class="weui-form-preview__label"></label>
+	              <em class="weui-form-preview__value" style="text-align: center;" th:text="${member.userName}"></em>
+			  	</div>
+			  </div>
+			  <div class="weui-form-preview__bd">
+				  <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">当前跟进客户总数：</label>
+	                  <span class="weui-form-preview__value">
+	                     <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toFallowCustomerDetail(\''+${member.userId}+'\')'">
+	                         <span style="margin-right:10px;" th:text="${member.fallowCustomers}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                     </a>
+	                  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">上周新登记客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                  	 <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toLastWeekAddCustomerDetail(\''+${member.userId}+'\')'">
+	                  	     <span style="margin-right:10px;" th:text="${member.lastWeekAddCustomers}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                  	 </a>
+	              	  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">上周起租合同数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toLastWeekRentCustomerDetail(\''+${member.userId}+'\')'" >
+	                         <span style="margin-right:10px;" th:text="${member.lastWeekRentCustomers}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	                  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">A类客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toCustomerADetail(\''+${member.userId}+'\')'">
+	                         <span style="margin-right:10px;" th:text="${member.customerA}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	                  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">B类客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toCustomerBDetail(\''+${member.userId}+'\')'">
+	                         <span style="margin-right:10px;" th:text="${member.customerB}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	              	  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">上周回访客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toLastWeekCallbackCustomerDetail(\''+${member.userId}+'\')'">
+	                         <span style="margin-right:10px;" th:text="${member.lastWeekCallbackCustomers}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	              	  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">上周总回访次数：</label>
+	                  <span class="weui-form-preview__value" style="text-align: right;" th:text="${member.callbackCustomers}">
+	             	  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">未及时回访AB类客户数 ：</label>
+	                  <span class="weui-form-preview__value">
+	                       <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toUncallbackCustomerABDetail(\''+${member.userId}+'\')'">
+	                           <span style="margin-right:10px;" th:text="${member.uncallback3Customers}"></span>
+	                           <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                       </a>
+	                  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">超一周未回访客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toUncallback7CustomerDetail(\''+${member.userId}+'\')'">
+	                         <span style="margin-right:10px;" th:text="${member.uncallback7Customers}"></span>
+	                         <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	                  </span>
+	              </div>
+	              <div class="weui-form-preview__item">
+	                  <label class="weui-form-preview__label">应强制转交或放弃客户数：</label>
+	                  <span class="weui-form-preview__value">
+	                      <a class="weui-form-preview__btn_primary" style="text-align: right;" href="javascript:" th:href="'javascript:toUncallback15CustomerDetail(\''+${member.userId}+'\')'">
+	                          <span style="margin-right:10px;" th:text="${member.uncallback15Customers}"></span>
+	                          <img th:src="@{/images/right.png}" alt="" class="weui-tabbar__icon" style="width:5px; height:10px;">
+	                      </a>
+	                  </span>
+	              </div>
+			  </div>
+			</div>
+         </div>
+    </div>
 </div>
+<script th:inline="javascript">
+/*<![CDATA[*/
+function toFallowCustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/fallowCustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toLastWeekAddCustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/lastWeekAddCustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toLastWeekRentCustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/lastWeekRentCustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toCustomerADetail(salesId) {
+	var redirectUrl = /*[[@{/report/customerADetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toCustomerBDetail(salesId) {
+	var redirectUrl = /*[[@{/report/customerBDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toLastWeekCallbackCustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/lastWeekCallbackCustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toUncallbackCustomerABDetail(salesId) {
+	var redirectUrl = /*[[@{/report/uncallbackCustomerABDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toUncallback7CustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/uncallback7CustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+function toUncallback15CustomerDetail(salesId) {
+	var redirectUrl = /*[[@{/report/uncallback15CustomerDetailCR(searchDate=${searchDate})}]]*/;  
+	window.location.href = redirectUrl + "&salesID=" + salesId;
+}
+/*]]>*/
+</script>
 </body>
 </html>

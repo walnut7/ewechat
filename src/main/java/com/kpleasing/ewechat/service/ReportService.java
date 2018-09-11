@@ -1,9 +1,9 @@
 package com.kpleasing.ewechat.service;
 
 import java.util.List;
-import java.util.Map;
 
 import com.kpleasing.ewechat.mongo.collections.BusinessTeam;
+import com.kpleasing.ewechat.mongo.collections.CustomerDetail;
 import com.kpleasing.ewechat.vo.Platform;
 
 public interface ReportService {
@@ -41,8 +41,7 @@ public interface ReportService {
 	 * @param map 
 	 * 
 	 */
-	public void pushBusinessTeamReport(Map<String, String> map);
-
+	public void pushBusinessReport();
 
 	/**
 	 * 
@@ -64,4 +63,12 @@ public interface ReportService {
 	 */
 	public List<BusinessTeam> findBusinessBranchReportMsg(String searchDate, String branchName) throws Exception;
 
+
+	/**
+	 * 
+	 * @param searchDate
+	 * @param salesID
+	 * @return
+	 */
+	public CustomerDetail findCustomersDetailReportMsg(String searchDate, String salesID);
 }

@@ -22,8 +22,13 @@ import com.kpleasing.ewechat.enums.APP_TYPE;
 import com.kpleasing.ewechat.mongo.collections.BranchCompany;
 import com.kpleasing.ewechat.mongo.collections.BusinessMember;
 import com.kpleasing.ewechat.mongo.collections.BusinessTeam;
+import com.kpleasing.ewechat.mongo.collections.CustomerDetail;
+import com.kpleasing.ewechat.mongo.collections.CustomerInfo;
 import com.kpleasing.ewechat.mongo.collections.KPBusinessReport;
+import com.kpleasing.ewechat.mongo.collections.ToUserInfo;
+import com.kpleasing.ewechat.mongo.dao.CustomerDetailDao;
 import com.kpleasing.ewechat.mongo.dao.KPBusinessReportDao;
+import com.kpleasing.ewechat.mongo.dao.ToUserInfoDao;
 import com.kpleasing.ewechat.protocol.send_text.SendTextResData;
 import com.kpleasing.ewechat.service.ReportService;
 import com.kpleasing.ewechat.util.ConfigUtil;
@@ -43,9 +48,14 @@ public class ReportServiceImpl implements ReportService {
 	@Autowired
 	CrmBpMasterDao crmBpMasterDao;
 	
-	
 	@Autowired
 	KPBusinessReportDao businessReportDao;
+	
+	@Autowired
+	CustomerDetailDao custDetailDao;
+	
+	@Autowired
+	ToUserInfoDao toUserInfoDao;
 
 	
 	private String getPushURL001() {
@@ -367,10 +377,15 @@ public class ReportServiceImpl implements ReportService {
 	private List<BranchCompany> getBranchCompanyList() {
 		List<BranchCompany> branchCompanyList = new ArrayList<BranchCompany>();
 		
-		BranchCompany branchCompany = new BranchCompany();
-		branchCompany.setBranchName("郑州分公司");
-		branchCompany.setBusinessTeam(getBusinessTeamList("201"));
-		branchCompanyList.add(branchCompany);
+		BranchCompany branchCompany1 = new BranchCompany();
+		branchCompany1.setBranchName("郑州分公司");
+		branchCompany1.setBusinessTeam(getBusinessTeamList("201"));
+		branchCompanyList.add(branchCompany1);
+		
+		BranchCompany branchCompany2 = new BranchCompany();
+		branchCompany2.setBranchName("西安分公司");
+		branchCompany2.setBusinessTeam(getBusinessTeamList("241"));
+		branchCompanyList.add(branchCompany2);
 		
 		return branchCompanyList;
 	}
@@ -409,6 +424,7 @@ public class ReportServiceImpl implements ReportService {
 				uncallback7Customers += businessMember.getUncallback7Customers();      
 				uncallback15Customers += businessMember.getUncallback15Customers();     
 			}
+			businessTeam.setTeamLeader(crmBpMasterDao.findBusinessTeamLeaderByPositionId(businessTeam.getTeamId()));
 			businessTeam.setBusinessMember(businessMemberList);
 			businessTeam.setMemberNum(businessMemberList.size());
 			businessTeam.setFallowCustomers(fallowCustomers);
@@ -431,69 +447,102 @@ public class ReportServiceImpl implements ReportService {
 	 * @param businessMember
 	 */
 	private void setBusinessMemberReport(BusinessMember businessMember) {
+		CustomerDetail custDetail = new CustomerDetail();
 		String userId = businessMember.getUserId();
+		custDetail.setReport_date(DateUtil.date2Str(DateUtil.getDate(), DateUtil.yyyyMMdd));
+		custDetail.setSales_id(userId);
+		custDetail.setSales_name(businessMember.getUserName());
+		
 		int fallowCustomers = crmBpMasterDao.getAllCrmBpMasterCount(userId);
 		businessMember.setFallowCustomers(fallowCustomers);
+		List<CustomerInfo> fallowCustomerDetailList = crmBpMasterDao.getAllCrmBpMasterDetailList(userId);
+		custDetail.setFallowCustomerDetail(fallowCustomerDetailList);
 		
-		int lastWeekAddCustomers = crmBpMasterDao.getLastWeekCrmBpMasterCount(userId);
+		int lastWeekAddCustomers = crmBpMasterDao.getLastWeekCrmBpMasterCount(userId); 
+		List<CustomerInfo> lastWeekCrmBpMasterDetailList = crmBpMasterDao.getLastWeekCrmBpMasterDetailList(userId);
 		businessMember.setLastWeekAddCustomers(lastWeekAddCustomers);
+		custDetail.setLastWeekAddCustomerDetail(lastWeekCrmBpMasterDetailList);
 		
 		int lastWeekRentCustomers = crmBpMasterDao.getLaskWeekRentCrmBpMasterCount(userId);
+		List<CustomerInfo> lastWeekRentCustomerDetailList = crmBpMasterDao.getLaskWeekRentCrmBpMasterDetailList(userId);
 		businessMember.setLastWeekRentCustomers(lastWeekRentCustomers);
+		custDetail.setLastWeekRentCustomerDetail(lastWeekRentCustomerDetailList);
 		
 		int customerA = crmBpMasterDao.getTypeACrmBpMasterCount(userId);
+		List<CustomerInfo> customerADetailList = crmBpMasterDao.getCrmABpMasterDetailList(userId);
 		businessMember.setCustomerA(customerA);
+		custDetail.setCustomerADetail(customerADetailList);
 		
 		int customerB = crmBpMasterDao.getTypeBCrmBpMasterCount(userId);
+		List<CustomerInfo> customerBDetailList = crmBpMasterDao.getCrmBBpMasterDetailList(userId);
 		businessMember.setCustomerB(customerB);
+		custDetail.setCustomerBDetail(customerBDetailList);
 		
 		int lastWeekCallbackCustomers = crmBpMasterDao.getLastWeekCallBackCrmBpMasterCount(userId);
+		List<CustomerInfo> lastWeekCallbackBpMasterDetailList = crmBpMasterDao.getLaskWeekCallbackCrmBpMasterDetailList(userId);
 		businessMember.setLastWeekCallbackCustomers(lastWeekCallbackCustomers);
+		custDetail.setLastWeekCallbackCustomerDetail(lastWeekCallbackBpMasterDetailList);
 		
 		int callbackCustomers = crmBpMasterDao.getAllCallBackCrmBpMasterCount(userId);
 		businessMember.setCallbackCustomers(callbackCustomers);
 		
-		businessMember.setUncallback3Customers(0);
-		businessMember.setUncallback7Customers(0);
-		businessMember.setUncallback15Customers(0);
+		int uncallback3Customers = crmBpMasterDao.getUnCallBackABCrmBpMasterCount(userId);
+		List<CustomerInfo> uncallback3CrmBpMasterDetailList = crmBpMasterDao.getUncallback3CrmBpMasterDetailList(userId);
+		businessMember.setUncallback3Customers(uncallback3Customers);
+		custDetail.setUncallback3CustomerDetail(uncallback3CrmBpMasterDetailList);
+		
+		int uncallback7Customers = crmBpMasterDao.getLastWeekUnCallBackCrmBpMasterCount(userId);
+		List<CustomerInfo> uncallback7CrmBpMasterDetailList = crmBpMasterDao.getUncallback7CrmBpMasterDetailList(userId);
+		businessMember.setUncallback7Customers(uncallback7Customers);
+		custDetail.setUncallback7CustomerDetail(uncallback7CrmBpMasterDetailList);
+		
+		int uncallback15Customers = crmBpMasterDao.getTransCrmBpMasterCount(userId);
+		List<CustomerInfo> uncallback15CrmBpMasterDetailList = crmBpMasterDao.getUncallback15CrmBpMasterDetailList(userId);
+		businessMember.setUncallback15Customers(uncallback15Customers);
+		custDetail.setUncallback15CustomerDetail(uncallback15CrmBpMasterDetailList);
+		
+		custDetailDao.createCustomerDetailReport(custDetail);
 	}
 
 
 	@Override
-	public void pushBusinessTeamReport(Map<String, String> map) {
-		logger.info("start info ...... ");
-		ConfigUtil conf = ConfigUtil.getInstance();
-		
-		StringBuilder strRequest = new StringBuilder();
-		strRequest.append("{")
-		.append("\"touser\":\"").append(map.get("touser")).append("\",")
-		.append("\"toparty\":\"\",")
-		.append("\"totag\":\"").append(conf.getPropertyParam("totag.report.label1")).append("\",")
+	public void pushBusinessReport() {
+		List<ToUserInfo> toList = toUserInfoDao.findAll();
+		//String sDate = DateUtil.date2Str(DateUtil.getAfterDate(DateUtil.getDate(), -1), DateUtil.yyyyMMdd);
+		String sDate = DateUtil.date2Str(DateUtil.getDate(), DateUtil.yyyyMMdd);
+		for(ToUserInfo to : toList) {
+			sendCR(to, sDate);
+		}
+	}
+	
+	
+	private void sendCR(ToUserInfo tui, String searchDate) {
+		StringBuilder req = new StringBuilder();
+		req.append("{")
+		.append("\"touser\":\"").append(tui.getToUser()).append("\",")
+		.append("\"toparty\":\"").append(tui.getToParty()).append("\",")
+		.append("\"totag\":\"").append(tui.getToTag()).append("\",")
 		.append("\"msgtype\":\"news\",")
 		.append("\"agentid\":\"").append(Configure.REPORT_AGENT_ID).append("\",")
 		.append("\"news\":{")
 		.append("     \"articles\": [")
 		.append("          {")
-		.append("               \"title\":\"郑州分公司CRM周报\", ")
-		.append("               \"description\":\"\", ")
-		.append("               \"url\":\"http://kpxmc-uat.e-autofinance.net:8801/report/"+map.get("condition")+"\", ")
-		.append("               \"picurl\":\"http://kpxmc-uat.e-autofinance.net:8801/images/crm_title.jpg\", ")
-		.append("               \"btntxt\":\"更多\" ")
+		.append("            \"title\":\"").append(tui.getTitle()).append("\", ")
+		.append("            \"description\":\"").append(tui.getDesc()).append("\", ")
+		.append("            \"url\":\"").append(tui.getSendUrl()).append("&searchDate=").append(searchDate).append("\", ")
+		.append("            \"picurl\":\"").append(tui.getMsgIconUrl()).append("\", ")
+		.append("            \"btntxt\":\"更多>>\" ")
 		.append("          }")
 		.append("      ]")
 		.append("    }")
 		.append("}");
-		logger.info(strRequest.toString());
 		
 		try {
 			String url = WeChatUtils.getSendNewsUrl(WeChatUtils.getAccessToken(APP_TYPE.REPORT));
 			logger.info(url);
 			
-			String result = HttpHelper.doHttpPost(url, strRequest.toString());
-			logger.info("响应结果："+result);
-			
+			String result = HttpHelper.doHttpPost(url, req.toString());
 			SendTextResData resText = new SendTextResData();
-			
 			resText = (SendTextResData) JsonUtil.jsonToBean(result, resText.getClass());
 			
 			logger.info("响应结果："+resText);
@@ -501,11 +550,10 @@ public class ReportServiceImpl implements ReportService {
 				url = WeChatUtils.getSendNewsUrl(WeChatUtils.getAccessToken(APP_TYPE.REPORT, true));
 				logger.info(url);
 				
-				result = HttpHelper.doHttpPost(url, strRequest.toString());
-				logger.info("响应结果："+result);
+				result = HttpHelper.doHttpPost(url, req.toString());
 			}
 		} catch (Exception e) {
-			logger.error("响应结果：" , e);
+			logger.error("响应结果异常：" , e);
 			e.printStackTrace();
 		}
 	}
@@ -542,5 +590,11 @@ public class ReportServiceImpl implements ReportService {
 			}
 		}
 		return null;
+	}
+
+
+	@Override
+	public CustomerDetail findCustomersDetailReportMsg(String searchDate, String salesID) {
+		return custDetailDao.findCustomersBySalesAndDate(searchDate, salesID);
 	}
 }

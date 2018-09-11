@@ -5,6 +5,7 @@ import java.util.List;
 public class BusinessTeam {
 	
 	private String teamName;
+	private String teamLeader;
 	private String teamId;
 	private Integer memberNum;
 	private int fallowCustomers;              // 跟进客户数
@@ -25,6 +26,14 @@ public class BusinessTeam {
 	
 	public void setTeamName(String teamName) {
 		this.teamName = teamName;
+	}
+
+	public String getTeamLeader() {
+		return teamLeader;
+	}
+
+	public void setTeamLeader(String teamLeader) {
+		this.teamLeader = teamLeader;
 	}
 
 	public String getTeamId() {

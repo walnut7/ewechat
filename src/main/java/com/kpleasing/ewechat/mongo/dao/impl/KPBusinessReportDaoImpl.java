@@ -20,7 +20,7 @@ public class KPBusinessReportDaoImpl extends AbstractBaseMongoTemplete implement
 	public void createKPBusinessReport(KPBusinessReport businessReport) {
 		Criteria criteria = Criteria.where("report_date").is(businessReport.getReport_date());
 		Query query = new Query(criteria);
-		mongoTemplate.findAndRemove(query, KPBusinessReport.class, "report_buss_crm");
+		mongoTemplate.findAndRemove(query, KPBusinessReport.class, "report_business_snap");
 		mongoTemplate.save(businessReport);
 	}
 
@@ -35,6 +35,6 @@ public class KPBusinessReportDaoImpl extends AbstractBaseMongoTemplete implement
 		
 		Query query = new Query();
 		query.addCriteria(criteria).with(new Sort(Sort.Direction.DESC, "report_date"));
-		return mongoTemplate.find(query, KPBusinessReport.class, "report_buss_crm");
+		return mongoTemplate.find(query, KPBusinessReport.class, "report_business_snap");
 	}
 }
