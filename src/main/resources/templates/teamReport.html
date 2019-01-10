@@ -3,7 +3,7 @@
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
-<title>郑州分公司CRM报表</title>
+<title th:text="${branchName}+'CRM报表'"></title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -20,12 +20,14 @@
 <body ontouchstart>
     <div class="weui-tab">
       <div class="weui-tab__bd">
-        <div class="weui-form-preview" style="margin-left:5px;margin-right:10px;background-color: #F8F8F8" >
-		  <div class="weui-form-preview__bd" onclick="javascript:toDetailPage()">
+		<div class="weui-form-preview" style="margin:1px 8px 20px 8px;background-color: #F8F8F8" > 
+		  <div class="weui-form-preview__hd">
 		  	<div class="weui-form-preview__item">
-              <label class="weui-form-preview__label">组名：</label>
-              <span class="weui-form-preview__value" style="text-align: left;" th:text="${team.teamName}"></span>
-            </div>
+		  	  <label class="weui-form-preview__label"></label>
+              <em class="weui-form-preview__value" style="text-align: center;" th:text="${team.teamName}+'-'+${team.teamLeader}"></em>
+		  	</div>
+		  </div>
+		  <div class="weui-form-preview__bd">
             <div class="weui-form-preview__item">
               <label class="weui-form-preview__label">销售人数：</label>
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.memberNum}"></span>
@@ -70,6 +72,9 @@
               <label class="weui-form-preview__label">应强制转交或放弃客户数：</label>
               <span class="weui-form-preview__value" style="text-align: right;" th:text="${team.uncallback15Customers}"></span>
             </div>
+		  </div>
+		  <div class="weui-form-preview__ft">
+		  	<a class="weui-form-preview__btn weui-form-preview__btn_default" href="javascript:" th:href="'javascript:toDetailPage()'" >查看详情>></a>
 		  </div>
        </div>
   	</div>

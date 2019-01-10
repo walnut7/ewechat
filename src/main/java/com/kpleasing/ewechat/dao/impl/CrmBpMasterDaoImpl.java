@@ -186,22 +186,40 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 
 
 	@Override
-	public int getLaskWeekRentCrmBpMasterCount(String userId) {
-		StringBuilder sqlString = new StringBuilder();
-		sqlString.append("select count(*) from con_contract c, hls_bp_master m, CRM_BP_MASTER n where c.bp_id_tenant = m.bp_id ")
+	public int getLaskWeekRentCrmBpMasterCount(String userName) {
+		// StringBuilder sqlString = new StringBuilder();
+		/*sqlString.append("select count(*) from con_contract c, hls_bp_master m, CRM_BP_MASTER n where c.bp_id_tenant = m.bp_id ")
 				 .append("and (m.cell_phone = n.cell_phone1 or m.cell_phone = n.cell_phone2) ")
 				 .append("and c.contract_status = 'INCEPT' ")
 				 .append("and c.data_class='NORMAL' ")
 				 .append("and n.owner_user_id = ? ")
-				 .append("and c.lease_start_date > (sysdate - interval '7' day) ");
-		   
-		return jdbcTemplate.queryForObject(sqlString.toString(), new java.lang.Object[]{userId}, Integer.class);
+				 .append("and c.lease_start_date > (sysdate - interval '7' day) ");*/
+		String sql = "select count(*) from hls_bp_master bm,\r\n" + 
+				"              (select m.description,\r\n" + 
+				"                       c.lease_start_date,\r\n" + 
+				"                       c.contract_status,\r\n" + 
+				"                       c.data_class,\r\n" + 
+				"                       c.contract_number,\r\n" + 
+				"                       c.bp_id_tenant\r\n" + 
+				"                  from tm_lease_item i, con_contract c, hls_car_model m\r\n" + 
+				"                 where c.contract_number = i.applyno(+)\r\n" + 
+				"                   and i.model_id = m.model_id(+) \r\n" + 
+				"                   and c.contract_status = 'INCEPT' \r\n" + 
+				"                   and c.data_class = 'NORMAL') cm,\r\n" + 
+				"               (select t.applyno, u.name \r\n" + 
+				"                    from tm_interface_create_contract t, ug_order_assignment  a, ug_operator_user u \r\n" + 
+				"                   where t.contract_line_id = a.order_id and a.user_id = u.user_id) pm                   \r\n" + 
+				"        where cm.bp_id_tenant = bm.bp_id\r\n" + 
+				"         and cm.contract_number = pm.applyno  \r\n" + 
+				"         and pm.name = ? \r\n" + 
+				"         and cm.lease_start_date > (sysdate - interval '7' day) ";
+		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userName}, Integer.class);
 	}
 	
 	
 	@Override
-	public List<CustomerInfo> getLaskWeekRentCrmBpMasterDetailList(String userId) {
-		String sql = "select cbm.name, cm.description, to_char(cm.lease_start_date, 'yyyy-mm-dd') as lease_start_date, vv.code_value_name  \r\n" + 
+	public List<CustomerInfo> getLaskWeekRentCrmBpMasterDetailList(String userName) {
+		/*String sql = "select cbm.name, cm.description, to_char(cm.lease_start_date, 'yyyy-mm-dd') as lease_start_date, vv.code_value_name  \r\n" + 
 				"  from hls_bp_master bm,\r\n" + 
 				"       (select m.description,\r\n" + 
 				"               c.lease_start_date,\r\n" + 
@@ -219,8 +237,27 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 				"      and cbm.customer_source = vv.code_value(+)\r\n" + 
 				"      and (bm.cell_phone = cbm.cell_phone1 or bm.cell_phone = cbm.cell_phone2)\r\n" + 
 				"      and cbm.owner_user_id = ?\r\n" + 
-				"      and cm.lease_start_date > (sysdate - interval '7' day) ";
-		return jdbcTemplate.query(sql, new java.lang.Object[]{userId}, new LastWeekRentCustomerDetailRowMapper());
+				"      and cm.lease_start_date > (sysdate - interval '7' day) ";*/
+		String sql = "select bm.bp_name, cm.description, to_char(cm.lease_start_date, 'yyyy-mm-dd') as lease_start_date from hls_bp_master bm,\r\n" + 
+				"              (select m.description,\r\n" + 
+				"                       c.lease_start_date,\r\n" + 
+				"                       c.contract_status,\r\n" + 
+				"                       c.data_class,\r\n" + 
+				"                       c.contract_number,\r\n" + 
+				"                       c.bp_id_tenant\r\n" + 
+				"                  from tm_lease_item i, con_contract c, hls_car_model m\r\n" + 
+				"                 where c.contract_number = i.applyno(+)\r\n" + 
+				"                   and i.model_id = m.model_id(+) \r\n" + 
+				"                   and c.contract_status = 'INCEPT' \r\n" + 
+				"                   and c.data_class = 'NORMAL') cm,\r\n" + 
+				"               (select t.applyno, u.name \r\n" + 
+				"                    from tm_interface_create_contract t, ug_order_assignment  a, ug_operator_user u \r\n" + 
+				"                   where t.contract_line_id = a.order_id and a.user_id = u.user_id) pm  \r\n" + 
+				"        where cm.bp_id_tenant = bm.bp_id \r\n" + 
+				"         and cm.contract_number = pm.applyno  \r\n" + 
+				"         and pm.name = ? \r\n" + 
+				"         and cm.lease_start_date > (sysdate - interval '7' day) ";
+		return jdbcTemplate.query(sql, new java.lang.Object[]{userName}, new LastWeekRentCustomerDetailRowMapper());
 	}
 	
 	
@@ -228,10 +265,10 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 		@Override
 		public CustomerInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
 			CustomerInfo customer = new CustomerInfo();
-			customer.setCust_name(rs.getString("name"));
+			customer.setCust_name(rs.getString("bp_name"));
 			customer.setCar_model(rs.getString("description"));
 			customer.setLeasing_start(rs.getString("lease_start_date"));
-			customer.setSource(rs.getString("code_value_name"));
+			// customer.setSource(rs.getString("code_value_name"));
 			return customer;
 		}
     }
@@ -266,7 +303,6 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 				"          and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
 				"          and ca.intention_level = 'A' " +
 				"          and ca.owner_user_id = ? ";
-		// String sql = "select count(*) from CRM_BP_MASTER where owner_user_id = ? and intention_level = 'A'";
 		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userId}, Integer.class);
 	}
 	
@@ -345,7 +381,6 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 				"          and ca.intention_level = 'B' " +
 				"          and ca.owner_user_id = ? ";
 		
-		//String sql = "select count(*) from CRM_BP_MASTER where owner_user_id = ? and intention_level = 'B'";
 		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userId}, Integer.class);
 	}
 	
@@ -441,67 +476,68 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 
 	@Override
 	public int getUnCallBackABCrmBpMasterCount(String userId) {
-		String sql = "select count(*) from  \r\n" + 
-				"       (select cbma.creation_date, cbma.owner_user_id, cbma.intention_level, cbma.bp_record_id, cbma.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"               and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,           \r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmb,\r\n" + 
-				"              (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"             and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,           \r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmc,\r\n" + 
-				"              (select m.id_card_no, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"              and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc\r\n" + 
-				"        where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"          and ca.bp_record_id = cc.bp_record_id          \r\n" + 
-				"          and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"          and (ca.intention_level = 'A' or ca.intention_level = 'B')\r\n" + 
-				"          and ca.Creation_Date < (sysdate - interval '3' day)\r\n" + 
-				"          and ca.owner_user_id = ? ";
+		String sql = "select count(*)\r\n" + 
+				"        from (select cbma.*, \r\n" + 
+				"                       bpc.contract_status \r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmb, \r\n" + 
+				"                      (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+) \r\n" + 
+				"                  and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc, \r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)  \r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and (ca.intention_level = 'A' or ca.intention_level = 'B')\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '3' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '3' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userId}, Integer.class);
 	}
 	
 	
 	@Override
 	public List<CustomerInfo> getUncallback3CrmBpMasterDetailList(String userId) {
-		String sql = "select ca.name, ca.cell_phone1, ca.cell_phone2, ca.id_card_no, ca.intention_level, vv.code_value_name, to_char(cd.creation_date, 'yyyy-mm-dd hh24:mi:ss') as creation_date \r\n" + 
-				"  from (select cbma.*,\r\n" + 
-				"               bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmb,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmc,\r\n" + 
-				"               (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
-				"       (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
-				"       (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id, created_by) cd\r\n" + 
-				" where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cc.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
-				"   and ca.customer_source = vv.code_value(+)  \r\n" + 
-				"   and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"   and (ca.intention_level = 'A' or ca.intention_level = 'B')\r\n" + 
-				"   and ca.Creation_Date < (sysdate - interval '3' day)\r\n" + 
-				"   and ca.owner_user_id = ? ";
+		String sql = "select ca.name, ca.cell_phone1, ca.cell_phone2, ca.id_card_no, ca.intention_level, vv.code_value_name, to_char(cd.creation_date, 'yyyy-mm-dd hh24:mi:ss') as creation_date\r\n" + 
+				"         from (select cbma.*, \r\n" + 
+				"                       bpc.contract_status \r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmb, \r\n" + 
+				"                      (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+) \r\n" + 
+				"                  and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc, \r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)  \r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and (ca.intention_level = 'A' or ca.intention_level = 'B')\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '3' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '3' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.query(sql, new java.lang.Object[]{userId}, new UnCallbackCustomerDetailRowMapper());
 	}
 	
@@ -527,33 +563,33 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 	@Override
 	public int getLastWeekUnCallBackCrmBpMasterCount(String userId) {
 		
-		String sql = "select count(*) from  \r\n" + 
-				"       (select cbma.creation_date, cbma.owner_user_id, cbma.intention_level, cbma.bp_record_id, cbma.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"               and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,           \r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmb,\r\n" + 
-				"              (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"             and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,           \r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmc,\r\n" + 
-				"              (select m.id_card_no, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"              and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc\r\n" + 
-				"        where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"          and ca.bp_record_id = cc.bp_record_id          \r\n" + 
-				"          and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"          and ca.Creation_Date < (sysdate - interval '7' day)\r\n" + 
-				"          and ca.owner_user_id = ? ";
+		String sql = "select count(*) \r\n" + 
+				"       from (select cbma.*,\r\n" + 
+				"                      bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmb,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc,\r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)  \r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '7' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '7' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userId}, Integer.class);
 	}
 	
@@ -561,96 +597,98 @@ public class CrmBpMasterDaoImpl implements CrmBpMasterDao {
 	@Override
 	public List<CustomerInfo> getUncallback7CrmBpMasterDetailList(String userId) {
 		String sql = "select ca.name, ca.cell_phone1, ca.cell_phone2, ca.id_card_no, ca.intention_level, vv.code_value_name, to_char(cd.creation_date, 'yyyy-mm-dd hh24:mi:ss') as creation_date \r\n" + 
-				"  from (select cbma.*,\r\n" + 
-				"               bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmb,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmc,\r\n" + 
-				"               (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
-				"       (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
-				"       (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id, created_by) cd\r\n" + 
-				" where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cc.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
-				"   and ca.customer_source = vv.code_value(+)  \r\n" + 
-				"   and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"   and ca.Creation_Date < (sysdate - interval '7' day)\r\n" + 
-				"   and ca.owner_user_id = ? ";
+				"       from (select cbma.*,\r\n" + 
+				"                      bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmb,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc,\r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)  \r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '7' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '7' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.query(sql, new java.lang.Object[]{userId}, new UnCallbackCustomerDetailRowMapper());
 	}
 
 
 	@Override
 	public int getTransCrmBpMasterCount(String userId) {
-		String sql = "select count(*) from  \r\n" + 
-				"       (select cbma.creation_date, cbma.owner_user_id, cbma.intention_level, cbma.bp_record_id, cbma.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"               and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,           \r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmb,\r\n" + 
-				"              (select m.cell_phone, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"             and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,           \r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"         from CRM_BP_MASTER cbmc,\r\n" + 
-				"              (select m.id_card_no, c.contract_status\r\n" + 
-				"                 from hls_bp_master m, con_contract c\r\n" + 
-				"                where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"        where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"              and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc\r\n" + 
-				"        where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"          and ca.bp_record_id = cc.bp_record_id          \r\n" + 
-				"          and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"          and ca.Creation_Date < (sysdate - interval '15' day)\r\n" + 
-				"          and ca.owner_user_id = ? ";
+		String sql = "select count(*)  \r\n" + 
+				"        from (select cbma.*,\r\n" + 
+				"                       bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                 from CRM_BP_MASTER cbmb,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc,\r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)\r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '15' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '15' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.queryForObject(sql, new java.lang.Object[]{userId}, Integer.class);
 	}
 
 
 	@Override
 	public List<CustomerInfo> getUncallback15CrmBpMasterDetailList(String userId) {
-		String sql = "select ca.name, ca.cell_phone1, ca.cell_phone2, ca.id_card_no, ca.intention_level, vv.code_value_name, to_char(cd.creation_date, 'yyyy-mm-dd hh24:mi:ss') as creation_date \r\n" + 
-				"  from (select cbma.*,\r\n" + 
-				"               bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbma,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
-				"       (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmb,\r\n" + 
-				"               (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
-				"       (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
-				"          from CRM_BP_MASTER cbmc,\r\n" + 
-				"               (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
-				"         where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
-				"           and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
-				"       (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
-				"       (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id, created_by) cd\r\n" + 
-				" where ca.bp_record_id = cb.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cc.bp_record_id\r\n" + 
-				"   and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
-				"   and ca.customer_source = vv.code_value(+)  \r\n" + 
-				"   and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
-				"   and ca.Creation_Date < (sysdate - interval '15' day)\r\n" + 
-				"   and ca.owner_user_id = ? ";
+		String sql = "select ca.name, ca.cell_phone1, ca.cell_phone2, ca.id_card_no, ca.intention_level, vv.code_value_name, to_char(cd.creation_date, 'yyyy-mm-dd hh24:mi:ss') as creation_date  \r\n" + 
+				"         from (select cbma.*,\r\n" + 
+				"                       bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbma,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                where cbma.cell_phone1 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) ca,\r\n" + 
+				"               (select cbmb.bp_record_id, cbmb.final_result, bpc.contract_status\r\n" + 
+				"                 from CRM_BP_MASTER cbmb,\r\n" + 
+				"                       (select m.cell_phone, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmb.cell_phone2 = bpc.cell_phone(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cb,\r\n" + 
+				"               (select cbmc.bp_record_id, cbmc.final_result, bpc.contract_status\r\n" + 
+				"                  from CRM_BP_MASTER cbmc,\r\n" + 
+				"                       (select m.id_card_no, c.contract_status from hls_bp_master m, con_contract c where m.bp_id = c.bp_id_tenant(+)) bpc\r\n" + 
+				"                 where cbmc.id_card_no = bpc.id_card_no(+)\r\n" + 
+				"                   and (bpc.contract_status <> 'INCEPT' or bpc.contract_status is null)) cc,\r\n" + 
+				"               (select v.code_value,v.code_value_name from sys_code_values_v v where v.code='CRM100_CUSTOMER_SOURCE') vv,\r\n" + 
+				"               (select bp_record_id, max(creation_date) as creation_date from CRM_BP_COMMUNICATION group by bp_record_id) cd\r\n" + 
+				"         where ca.bp_record_id = cb.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cc.bp_record_id\r\n" + 
+				"           and ca.bp_record_id = cd.bp_record_id(+)\r\n" + 
+				"           and ca.customer_source = vv.code_value(+)\r\n" + 
+				"           and (ca.final_result = 'SUCCESS' or ca.final_result is null)\r\n" + 
+				"           and ca.Creation_Date < (sysdate - interval '15' day)\r\n" + 
+				"           and (cd.creation_date < (sysdate - interval '15' day) or cd.creation_date is null)\r\n" + 
+				"           and ca.owner_user_id = ? ";
 		return jdbcTemplate.query(sql, new java.lang.Object[]{userId}, new UnCallbackCustomerDetailRowMapper());
 	}
 }

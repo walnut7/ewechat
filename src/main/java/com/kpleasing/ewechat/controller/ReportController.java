@@ -128,22 +128,23 @@ public class ReportController {
 	 * @param searchDate
 	 * @param branchName
 	 * @param teamID
-	 * @param saleID
+	 * @param salesID
 	 * @param model
 	 * @return
 	 */
 	@RequestMapping("/personalCR")
-    public String personalCrmReportMsg(String searchDate, String branchName, String teamID, String saleID, Model model) {
+    public String personalCrmReportMsg(String searchDate, String branchName, String teamID, String salesID, Model model) {
 		try {
-	        logger.info("报表日期："+searchDate+"\t分公司名称："+branchName+"\tTeamID："+teamID+"\t销售ID："+saleID);
+	        logger.info("报表日期："+searchDate+"\t分公司名称："+branchName+"\tTeamID："+teamID+"\t销售ID："+salesID);
 	        BusinessTeam businessTeam = reportServ.findBusinessTeamReportMsg(searchDate, branchName, teamID);
 	        
 	        model.addAttribute("team", businessTeam);
 	        model.addAttribute("branchName", branchName);
 	        model.addAttribute("searchDate", searchDate);
+	        model.addAttribute("salesID", salesID);
 	        List<BusinessMember> businessMemberList = businessTeam.getBusinessMember();
 	        for(BusinessMember businessMember : businessMemberList) {
-	        	if(saleID.equals(businessMember.getUserId())) {
+	        	if(salesID.equals(businessMember.getUserId())) {
 	        		model.addAttribute("sales", businessMember);
 	        	}
 	        }
@@ -219,7 +220,7 @@ public class ReportController {
 	@RequestMapping("/customerADetailCR")
     public String customerAReportDetail(String searchDate, String salesID, Model model) {
 		try {
-	        logger.info("报表日期："+searchDate+"\t销售员ID："+salesID);
+	        logger.info("报表日期："+searchDate+"\t销售员ID：" + salesID);
 	        CustomerDetail customerDetail = reportServ.findCustomersDetailReportMsg(searchDate, salesID);
 	        List<CustomerInfo> customerADetail = customerDetail.getCustomerADetail();
 	        

@@ -463,8 +463,9 @@ public class ReportServiceImpl implements ReportService {
 		businessMember.setLastWeekAddCustomers(lastWeekAddCustomers);
 		custDetail.setLastWeekAddCustomerDetail(lastWeekCrmBpMasterDetailList);
 		
-		int lastWeekRentCustomers = crmBpMasterDao.getLaskWeekRentCrmBpMasterCount(userId);
-		List<CustomerInfo> lastWeekRentCustomerDetailList = crmBpMasterDao.getLaskWeekRentCrmBpMasterDetailList(userId);
+		String userName = businessMember.getUserName();
+		int lastWeekRentCustomers = crmBpMasterDao.getLaskWeekRentCrmBpMasterCount(userName);
+		List<CustomerInfo> lastWeekRentCustomerDetailList = crmBpMasterDao.getLaskWeekRentCrmBpMasterDetailList(userName);
 		businessMember.setLastWeekRentCustomers(lastWeekRentCustomers);
 		custDetail.setLastWeekRentCustomerDetail(lastWeekRentCustomerDetailList);
 		
@@ -514,6 +515,19 @@ public class ReportServiceImpl implements ReportService {
 			sendCR(to, sDate);
 		}
 	}
+	
+	/*public static void main(String[] argc) {
+		String sDate = DateUtil.date2Str(DateUtil.getDate(), DateUtil.yyyyMMdd);
+		ToUserInfo to = new ToUserInfo();
+		to.setToUser("LiuYuLei");
+		to.setBranchName("");
+		to.setTitle("郑州分公司CRM周报");
+		to.setDesc("");
+		to.setSendUrl("http://kpxmc.e-autofinance.net:8801/report/teamTopCR?branchName=郑州分公司");
+		to.setMsgIconUrl("http://kpxmc.e-autofinance.net:8801/images/crm_title.jpg");
+		ReportServiceImpl r = new ReportServiceImpl();
+		r.sendCR(to, sDate);
+	}*/
 	
 	
 	private void sendCR(ToUserInfo tui, String searchDate) {
